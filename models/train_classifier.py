@@ -45,8 +45,8 @@ def load_data(database_filepath):
     # load data at database_filepath
     engine = create_engine('sqlite:///'+ database_filepath)
     df = pd.read_sql_table('messages', engine)
-    X = df.message[:7]
-    Y = df.iloc[:7,4:]
+    X = df.message
+    Y = df.iloc[:,4:]
     
     return X, Y, Y.columns
 
@@ -74,10 +74,10 @@ def tokenize(text):
     
     # Lemmatization
     lemmed = [WordNetLemmatizer().lemmatize(w) for w in words]
-    lemmed = [WordNetLemmatizer().lemmatize(w, pos='v') for w in lemmed]
+    tokens = [WordNetLemmatizer().lemmatize(w, pos='v') for w in lemmed]
     
     # Stemming
-    tokens = [PorterStemmer().stem(w) for w in lemmed]
+    # tokens = [PorterStemmer().stem(w) for w in lemmed]
     
     return tokens
 
@@ -106,40 +106,6 @@ def build_model():
     
     return model
 
-def display_scores(Y_pred,Y_test,category_names):
-    '''
-    Returns table containing measures for the predicted classes
-    INPUT:
-        Y_pred : predicted data
-        Y_test : True result for the test data
-        category_names [list] : a list of all categories
-    
-    OUTPUT:
-        scores [DataFrame] : A table containing the following measures for every categories : F1-score, precision
-                            recall
-
-    '''
-    
-    y_pred_bis=pd.DataFrame(data=Y_pred,columns=category_names)
-    metric='macro avg'
-    f1_score=[]
-    precision=[]
-    recall=[]
-    scores=pd.DataFrame()
-
-    for col in category_names:
-        cl=classification_report(Y_test[col],y_pred_bis[col],output_dict = True)
-        print(cl)
-        f1_score.append(cl[metric]['f1-score'])
-        precision.append(cl[metric]['precision'])
-        recall.append(cl[metric]['recall'])
-
-    scores['categories']=category_names
-    scores['f1-score']=f1_score
-    scores['precision']=precision
-    scores['recall']=recall
-
-    return scores
 
 def evaluate_model(model, X_test, Y_test, category_names):
     '''
@@ -155,14 +121,11 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
     '''
 
-    Y_pred = model.predict(X_test)
-    accuracy = (Y_pred == Y_test).mean()
-    scores = display_scores(Y_pred,Y_test,category_names)
-    
-    print("Accuracy:", accuracy)
-    print("\nBest Parameters:", model.best_params_)
-    print("Overall F1 score:", scores['f1-score'].mean())
-    scores.head(5)
+    test_pred = model.predict(X_test) 
+
+    for i in range(len(category_names)): 
+        print(category_names[i]) 
+        print(classification_report(Y_test[category_names[i]], test_pred[:, i]))
     
     return
 

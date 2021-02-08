@@ -69,6 +69,10 @@ def clean_data(df):
         # convert column from string to numeric
         categories[column] = categories[column].astype('int64')
     
+    # lets change all values 2 to 1 in 'related' category
+    filt = categories.related == 2
+    categories.loc[filt,'related'] = 1
+    
     # drop the original categories column from `df`
     df.drop('categories',axis=1,inplace=True)
     
